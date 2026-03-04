@@ -51,7 +51,10 @@ def create_feature(feature_arg):
 
     # Bulk writing
     for path, content in files_to_create.items():
-        path.write_text(content)
+        if not path.exists():
+            path.write_text(content)
+        else:
+            print(f"Skipping: {path.name} already exists.")
     
     print(f"Generated feature: {feature_name}" + (f" with entity: {entity_name}" if entity_name else ""))
 

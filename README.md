@@ -2,7 +2,7 @@
 
 fclean is a Python-based CLI tool designed to automate the creation of Clean Architecture structures for Flutter projects. It eliminates the repetitive task of manually setting up directories and boilerplate files for new features.
 
-## Project Status: v1.0.0
+## Project Status: v1.0.1
 
 The current version of the tool provides automated scaffolding for Flutter features, ensuring consistency across the codebase while enforcing a strict separation of concerns.
 
