@@ -16,13 +16,21 @@
 
 ---
 
-## Phase 1 — Foundation Fixes
+## Phase 1: Foundation Fixes
 
 **Goal:** The generated Dart code is syntactically correct and the CLI rejects invalid input.
+**Requirements:** CORE-01, CORE-02, CORE-03, DX-02
+**Plans:** 3 plans
 
 **Why first:** The PascalCase bug and lack of validation produce broken generated code. Nothing else can be trusted until these are fixed.
 
+> **Wave order:** All three plans edit `fclean.py`, so they run sequentially (no file-ownership overlap allowed in a wave). Wave 1: 01-01 → Wave 2: 01-02 → Wave 3: 01-03 (01-03 also needs `to_pascal_case` from 01-01).
+
 ### Plans
+
+- [ ] 01-01-PLAN.md — PascalCase conversion: add `to_pascal_case()`, replace all 10 `.capitalize()` sites (CORE-01) [Wave 1]
+- [ ] 01-02-PLAN.md — Input validation + DX-02 notice: `validate_name()` before any mkdir, `--state` omission notice (CORE-02, DX-02) [Wave 2]
+- [ ] 01-03-PLAN.md — Fix Riverpod template: typed `StateNotifierProvider<FeatureNotifier, FeatureState>` stub (CORE-03) [Wave 3]
 
 **Plan 1.1 — PascalCase Conversion**
 - Replace all `capitalize()` calls with a `to_pascal_case()` helper that splits on `_` and capitalizes each segment
@@ -47,9 +55,11 @@
 
 ---
 
-## Phase 2 — Restructure & Package
+## Phase 2: Restructure & Package
 
 **Goal:** fclean is a proper Python package installable via `pip install .`.
+**Requirements:** PKG-01, PKG-02, PKG-03
+**Plans:** 2 plans
 
 **Why second:** Adding more features to a 142-line single file will create maintenance debt. The module structure must be established before new features are layered in.
 
@@ -77,9 +87,11 @@
 
 ---
 
-## Phase 3 — Tool Test Suite
+## Phase 3: Tool Test Suite
 
 **Goal:** A `pytest` suite validates all generators, templates, and validators.
+**Requirements:** TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
+**Plans:** 3 plans
 
 **Why third:** Tests must be written against the new module layout (Phase 2) to be maintainable. Adding features in Phases 4–5 without tests would mean shipping untested code.
 
@@ -108,9 +120,11 @@
 
 ---
 
-## Phase 4 — UseCase Scaffolding
+## Phase 4: UseCase Scaffolding
 
 **Goal:** Generated features include a `UseCase<Type, Params>` abstract base class and a concrete stub.
+**Requirements:** USE-01, USE-02, USE-03
+**Plans:** 3 plans
 
 **Why fourth:** This is the most-requested missing feature. The module structure from Phase 2 makes it straightforward to add without touching unrelated code.
 
@@ -140,9 +154,11 @@
 
 ---
 
-## Phase 5 — Extended Scaffolding
+## Phase 5: Extended Scaffolding
 
 **Goal:** Provider state management is supported, and features generate mirrored test stub files.
+**Requirements:** STATE-01, STATE-02, TSCF-01, TSCF-02, TSCF-03
+**Plans:** 3 plans
 
 ### Plans
 
@@ -170,9 +186,11 @@
 
 ---
 
-## Phase 6 — Developer Experience
+## Phase 6: Developer Experience
 
 **Goal:** The tool is polished and documented for open-source users.
+**Requirements:** DX-01
+**Plans:** 2 plans
 
 ### Plans
 
