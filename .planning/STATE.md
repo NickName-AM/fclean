@@ -1,7 +1,21 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: — Distributable fclean
+status: executing
+last_updated: "2026-06-02T18:21:27.467Z"
+progress:
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 3
+  completed_plans: 0
+  percent: 0
+---
+
 # Project State
 
 **Last updated:** 2026-06-02
-**Status:** Initialized — ready to plan Phase 1
+**Status:** Ready to execute
 
 ## Project Reference
 
@@ -14,6 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-06-02)
 
 **Phase 1 — Foundation Fixes**
 Fix the three correctness bugs before anything else is added:
+
 - PascalCase conversion (`capitalize()` → `to_pascal_case()`)
 - Input validation for feature/entity names
 - Riverpod template fix (typed StateNotifierProvider)
