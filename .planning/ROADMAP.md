@@ -63,7 +63,12 @@
 
 **Why second:** Adding more features to a 142-line single file will create maintenance debt. The module structure must be established before new features are layered in.
 
+> **Wave order:** 02-01 creates the `fclean/` package and deletes `fclean.py` (Wave 1). 02-02 adds `pyproject.toml`, installs editably, and updates test imports (Wave 2) — it requires the `fclean.cli:main` entry-point target to exist first, so it cannot run until 02-01 completes.
+
 ### Plans
+
+- [ ] 02-01-PLAN.md — Module layout: split `fclean.py` into `fclean/` package submodules with re-export `__init__.py`, delete `fclean.py` (PKG-01) [Wave 1]
+- [ ] 02-02-PLAN.md — pyproject.toml + entry point: hatchling build, `fclean = "fclean.cli:main"`, editable install, remove `sys.path` hacks, regression-verify 12 tests (PKG-02, PKG-03) [Wave 2]
 
 **Plan 2.1 — Module Layout**
 - Create `fclean/` package directory with `__init__.py`
@@ -72,12 +77,13 @@
   - `fclean/generators/feature.py` — `create_feature()` and directory/file logic
   - `fclean/generators/validator.py` — `validate_name()`, `to_pascal_case()`
   - `fclean/templates/bloc.py`, `cubit.py`, `riverpod.py`, `getx.py` — template provider functions
+- Delete root `fclean.py` in the same plan (Python prefers the directory; coexistence causes import confusion)
 - Covers: PKG-01
 
 **Plan 2.2 — pyproject.toml + Entry Point**
-- Add `pyproject.toml` with `[project]`, `requires-python = ">=3.8"`, `[project.scripts] fclean = "fclean.cli:main"`, `[build-system]` using setuptools or hatchling
-- Add `pytest` and `pytest-tmp-path` as `[project.optional-dependencies] dev`
-- Verify `pip install -e .` makes `fclean` available on PATH
+- Add `pyproject.toml` with `[project]`, `requires-python = ">=3.8"`, `[project.scripts] fclean = "fclean.cli:main"`, `[build-system]` using hatchling
+- Add `pytest` as `[project.optional-dependencies] dev` (NOT `pytest-tmp-path` — that package does not exist; `tmp_path` is a built-in pytest fixture)
+- Verify `pip install -e .` makes `fclean` available on PATH and the 12 existing tests stay green
 - Covers: PKG-02, PKG-03
 
 ### Success Criteria
