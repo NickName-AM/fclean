@@ -8,7 +8,7 @@
 | Phase | Name | Focus | Requirements |
 |-------|------|--------|-------------|
 | 1 | 3/3 | Complete   | 2026-06-03 |
-| 2 | Restructure & Package | Module layout + pip packaging | PKG-01, PKG-02, PKG-03 |
+| 2 | 1/2 | In Progress|  |
 | 3 | Tool Test Suite | pytest coverage for all generators | TEST-01 – TEST-05 |
 | 4 | UseCase Scaffolding | Abstract base + concrete stubs | USE-01, USE-02, USE-03 |
 | 5 | Extended Scaffolding | Provider + test file generation | STATE-01, STATE-02, TSCF-01 – TSCF-03 |
@@ -59,7 +59,7 @@
 
 **Goal:** fclean is a proper Python package installable via `pip install .`.
 **Requirements:** PKG-01, PKG-02, PKG-03
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 **Why second:** Adding more features to a 142-line single file will create maintenance debt. The module structure must be established before new features are layered in.
 
@@ -67,7 +67,7 @@
 
 ### Plans
 
-- [ ] 02-01-PLAN.md — Module layout: split `fclean.py` into `fclean/` package submodules with re-export `__init__.py`, delete `fclean.py` (PKG-01) [Wave 1]
+- [x] 02-01-PLAN.md — Module layout: split `fclean.py` into `fclean/` package submodules with re-export `__init__.py`, delete `fclean.py` (PKG-01) [Wave 1]
 - [ ] 02-02-PLAN.md — pyproject.toml + entry point: hatchling build, `fclean = "fclean.cli:main"`, editable install, remove `sys.path` hacks, regression-verify 12 tests (PKG-02, PKG-03) [Wave 2]
 
 **Plan 2.1 — Module Layout**
