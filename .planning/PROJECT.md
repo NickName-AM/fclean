@@ -19,19 +19,15 @@ One command that generates a complete, correct Flutter Clean Architecture featur
 - ✓ Skip (not overwrite) existing files on re-run — existing
 - ✓ Validate Flutter project root via `pubspec.yaml` presence — existing
 
-### Active (Phase 02 complete — package restructured, pyproject.toml added, 12 tests green)
+### Active (Phase 03 complete — 30-test suite, all state branches, dry_run parameter added)
 
-- [ ] Fix PascalCase conversion — `auth_profile` → `AuthProfile` (not `Auth_profile`)
 - [ ] Generate abstract `UseCase<Type, Params>` base class once per feature in `domain/usecases/`
 - [ ] Generate a concrete usecase stub per feature extending the base class
 - [ ] Improve Riverpod template — typed `StateNotifierProvider` stub instead of bare `null`
 - [ ] Add Provider (flutter_provider) as a fifth `--state` option
-- [ ] Add `--dry-run` flag — print all paths that would be created without writing
+- [ ] Add `--dry-run` CLI flag — print all paths that would be created without writing (Phase 6/DX-01; `dry_run` parameter on `create_feature()` is done)
 - [ ] Scaffold test stubs mirroring the feature structure under `test/features/<name>/`
 - [ ] Validate feature/entity names against `^[a-z][a-z0-9_]*$` with a clear error message
-- [ ] Package as a proper `pip install fclean` CLI (`pyproject.toml`, `fclean` entry point)
-- [ ] Restructure from single-file script to module layout (`cli/`, `templates/`, `generators/`)
-- [ ] Add test suite covering template correctness, PascalCase conversion, and validation
 
 ### Out of Scope
 
@@ -80,4 +76,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-03 — Phase 01 (foundation-fixes) complete. CORE-01, CORE-02, CORE-03, DX-02 validated and test-locked.*
+*Last updated: 2026-06-03 — Phase 03 (tool-test-suite) complete. TEST-01 through TEST-05 validated. 30 tests pass, 1 skipped (5th provider template pending Phase 5). dry_run parameter added to create_feature() for Phase 6 CLI flag scaffolding.*
