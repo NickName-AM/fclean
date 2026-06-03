@@ -7,7 +7,7 @@
 
 | Phase | Name | Focus | Requirements |
 |-------|------|--------|-------------|
-| 1 | 1/3 | In Progress|  |
+| 1 | 2/3 | In Progress|  |
 | 2 | Restructure & Package | Module layout + pip packaging | PKG-01, PKG-02, PKG-03 |
 | 3 | Tool Test Suite | pytest coverage for all generators | TEST-01 – TEST-05 |
 | 4 | UseCase Scaffolding | Abstract base + concrete stubs | USE-01, USE-02, USE-03 |
@@ -20,7 +20,7 @@
 
 **Goal:** The generated Dart code is syntactically correct and the CLI rejects invalid input.
 **Requirements:** CORE-01, CORE-02, CORE-03, DX-02
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 **Why first:** The PascalCase bug and lack of validation produce broken generated code. Nothing else can be trusted until these are fixed.
 
@@ -29,7 +29,7 @@
 ### Plans
 
 - [x] 01-01-PLAN.md — PascalCase conversion: add `to_pascal_case()`, replace all 10 `.capitalize()` sites (CORE-01) [Wave 1]
-- [ ] 01-02-PLAN.md — Input validation + DX-02 notice: `validate_name()` before any mkdir, `--state` omission notice (CORE-02, DX-02) [Wave 2]
+- [x] 01-02-PLAN.md — Input validation + DX-02 notice: `validate_name()` before any mkdir, `--state` omission notice (CORE-02, DX-02) [Wave 2]
 - [ ] 01-03-PLAN.md — Fix Riverpod template: typed `StateNotifierProvider<FeatureNotifier, FeatureState>` stub (CORE-03) [Wave 3]
 
 **Plan 1.1 — PascalCase Conversion**
