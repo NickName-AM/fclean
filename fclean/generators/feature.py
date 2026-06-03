@@ -13,7 +13,7 @@ def is_flutter_project():
     return Path("pubspec.yaml").exists()
 
 
-def create_feature(feature_arg, state_type):
+def create_feature(feature_arg, state_type, dry_run=False):
     parts = feature_arg.split(":")
     if len(parts) > 2:
         print(
@@ -37,8 +37,9 @@ def create_feature(feature_arg, state_type):
         "presentation/pages", "presentation/widgets"
     ]
 
-    for sub_dir in sub_dirs:
-        (base_path / sub_dir).mkdir(parents=True, exist_ok=True)
+    if not dry_run:
+        for sub_dir in sub_dirs:
+            (base_path / sub_dir).mkdir(parents=True, exist_ok=True)
 
     files_to_create = {
         base_path / f"data/datasources/{feature_name}_remote_datasource.dart":
@@ -80,6 +81,9 @@ def create_feature(feature_arg, state_type):
             files_to_create[base_path / rel_path] = content
 
     for path, content in files_to_create.items():
+        if dry_run:
+            print(path)
+            continue
         if path.exists():
             print(f"Skipping: {path} already exists.")
             continue
