@@ -474,17 +474,19 @@ def test_getx_controller_key():
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **TEST-05 resolution strategy**
    - What we know: `--dry-run` (DX-01) is Phase 6 work; TEST-05 needs a test now
    - What's unclear: Should Phase 3 implement `dry_run=False` on `create_feature()`, or use skip stubs?
    - Recommendation: Implement `dry_run` parameter on `create_feature()` only (no CLI/argparse changes). This satisfies TEST-05 without scope bleed into Phase 6.
+   - RESOLVED: Implement `dry_run=False` parameter on `create_feature()` per Pattern 5. No argparse changes; `--dry-run` CLI flag remains Phase 6/DX-01.
 
 2. **TEST-03 "5 template providers" count**
    - What we know: 4 providers exist today; the 5th (provider) is Phase 5
    - What's unclear: Does TEST-03 require the 5th to be tested in Phase 3?
    - Recommendation: Cover 4 existing providers fully in Phase 3. Add a `pytest.mark.skip` stub with comment `# Phase 5: provider template pending STATE-01`. Phase 5's Plan 5.3 removes the skip.
+   - RESOLVED: Cover 4 existing providers (bloc, cubit, riverpod, getx) + `@pytest.mark.skip` stub for 5th (provider/ChangeNotifier, pending Phase 5 STATE-01).
 
 ---
 
