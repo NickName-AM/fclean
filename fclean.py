@@ -105,8 +105,15 @@ def get_getx_templates(feature):
 
 def create_feature(feature_arg, state_type):
     parts = feature_arg.split(":")
+    if len(parts) > 2:
+        print(
+            f"Error: Invalid feature argument '{feature_arg}'. "
+            "Expected format: <feature> or <feature>:<entity>.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     feature_name = parts[0]
-    entity_name = parts[1] if len(parts) > 1 else None
+    entity_name = parts[1] if len(parts) == 2 else None
 
     validate_name(feature_name)
     if entity_name is not None:
