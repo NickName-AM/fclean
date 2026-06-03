@@ -156,6 +156,14 @@ def create_feature(feature_arg, state_type):
         "getx": get_getx_templates
     }
 
+    if state_type is not None and state_type not in state_map:
+        print(
+            f"Error: Unknown state type '{state_type}'. "
+            f"Valid choices: {', '.join(sorted(state_map))}.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     if state_type in state_map:
         templates = state_map[state_type](feature_name)
         for rel_path, content in templates.items():
