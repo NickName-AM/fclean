@@ -52,3 +52,21 @@ def test_validate_name_leading_digit_exits():
 def test_validate_name_empty_exits():
     with pytest.raises(SystemExit):
         validate_name("")
+
+
+def test_validate_name_hyphen_exits():
+    with pytest.raises(SystemExit) as exc_info:
+        validate_name("my-feature")
+    assert exc_info.value.code == 1
+
+
+def test_validate_name_space_exits():
+    with pytest.raises(SystemExit) as exc_info:
+        validate_name("my feature")
+    assert exc_info.value.code == 1
+
+
+def test_validate_name_double_underscore_exits():
+    with pytest.raises(SystemExit) as exc_info:
+        validate_name("my__feature")
+    assert exc_info.value.code == 1
