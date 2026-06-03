@@ -19,7 +19,7 @@ One command that generates a complete, correct Flutter Clean Architecture featur
 - ✓ Skip (not overwrite) existing files on re-run — existing
 - ✓ Validate Flutter project root via `pubspec.yaml` presence — existing
 
-### Active
+### Active (Phase 02 complete — package restructured, pyproject.toml added, 12 tests green)
 
 - [ ] Fix PascalCase conversion — `auth_profile` → `AuthProfile` (not `Auth_profile`)
 - [ ] Generate abstract `UseCase<Type, Params>` base class once per feature in `domain/usecases/`
