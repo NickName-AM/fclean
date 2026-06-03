@@ -156,7 +156,7 @@ def create_feature(feature_arg, state_type):
 
     for path, content in files_to_create.items():
         if path.exists():
-            print(f"Skipping: {path.relative_to(Path.cwd())} already exists.")
+            print(f"Skipping: {path} already exists.")
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
