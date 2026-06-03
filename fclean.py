@@ -2,12 +2,24 @@ import sys
 import argparse
 from pathlib import Path
 
+
+def to_pascal_case(name: str) -> str:
+    """Convert snake_case to PascalCase for Dart class names.
+
+    Examples:
+        user_profile -> UserProfile
+        auth -> Auth
+        my_feature2 -> MyFeature2
+    """
+    return "".join(word.capitalize() for word in name.split("_"))
+
+
 def is_flutter_project():
     """Checks if the current directory contains a pubspec.yaml file."""
     return Path("pubspec.yaml").exists()
 
 def get_bloc_templates(feature):
-    name = feature.capitalize()
+    name = to_pascal_case(feature)
     return {
         f"presentation/bloc/{feature}_event.dart": f"abstract class {name}Event {{}}",
         f"presentation/bloc/{feature}_state.dart": (
@@ -28,7 +40,7 @@ def get_bloc_templates(feature):
     }
 
 def get_cubit_templates(feature):
-    name = feature.capitalize()
+    name = to_pascal_case(feature)
     return {
         f"presentation/cubit/{feature}_state.dart": (
             f"abstract class {name}State {{}}\n\n"
@@ -51,7 +63,7 @@ def get_riverpod_templates(feature):
     }
 
 def get_getx_templates(feature):
-    name = feature.capitalize()
+    name = to_pascal_case(feature)
     return {
         f"presentation/controller/{feature}_controller.dart": (
             f"import 'package:get/get.dart';\n\n"
@@ -85,23 +97,23 @@ def create_feature(feature_arg, state_type):
         (base_path / sub_dir).mkdir(parents=True, exist_ok=True)
 
     files_to_create = {
-        base_path / f"data/datasources/{feature_name}_remote_datasource.dart": 
-            f"abstract class {feature_name.capitalize()}RemoteDataSource {{}}",
-        base_path / f"data/datasources/{feature_name}_local_datasource.dart": 
-            f"abstract class {feature_name.capitalize()}LocalDataSource {{}}",
-        base_path / f"data/repository/{feature_name}_repository_impl.dart": 
+        base_path / f"data/datasources/{feature_name}_remote_datasource.dart":
+            f"abstract class {to_pascal_case(feature_name)}RemoteDataSource {{}}",
+        base_path / f"data/datasources/{feature_name}_local_datasource.dart":
+            f"abstract class {to_pascal_case(feature_name)}LocalDataSource {{}}",
+        base_path / f"data/repository/{feature_name}_repository_impl.dart":
             f"import '../../domain/repository/{feature_name}_repository.dart';\n\n"
-            f"class {feature_name.capitalize()}RepositoryImpl implements {feature_name.capitalize()}Repository {{}}",
-        base_path / f"domain/repository/{feature_name}_repository.dart": 
-            f"abstract class {feature_name.capitalize()}Repository {{}}",
+            f"class {to_pascal_case(feature_name)}RepositoryImpl implements {to_pascal_case(feature_name)}Repository {{}}",
+        base_path / f"domain/repository/{feature_name}_repository.dart":
+            f"abstract class {to_pascal_case(feature_name)}Repository {{}}",
     }
 
     if entity_name:
         files_to_create[base_path / f"domain/entities/{entity_name}.dart"] = \
-            f"class {entity_name.capitalize()} {{}}"
+            f"class {to_pascal_case(entity_name)} {{}}"
         files_to_create[base_path / f"data/models/{entity_name}_model.dart"] = \
             f"import '../../domain/entities/{entity_name}.dart';\n\n" \
-            f"class {entity_name.capitalize()}Model extends {entity_name.capitalize()} {{}}"
+            f"class {to_pascal_case(entity_name)}Model extends {to_pascal_case(entity_name)} {{}}"
 
     state_map = {
         "bloc": get_bloc_templates,
