@@ -166,7 +166,7 @@ def create_feature(feature_arg, state_type):
             print(f"Skipping: {path} already exists.")
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
+        path.write_text(content, encoding="utf-8")
     
     print(f"Generated feature: {feature_name} (State: {state_type if state_type else 'None'})")
 
