@@ -101,23 +101,15 @@
 
 **Why third:** Tests must be written against the new module layout (Phase 2) to be maintainable. Adding features in Phases 4–5 without tests would mean shipping untested code.
 
+> **Wave order:** All three plans run in **Wave 1** (parallel). File ownership is disjoint: 03-01 owns `tests/test_utils.py`, 03-02 owns `tests/test_generator.py`, 03-03 owns `fclean/generators/feature.py` + `tests/test_templates.py`. No file overlap → no inter-plan dependency.
+
+> **TEST-05 decision (per 03-RESEARCH.md Pattern 5):** Phase 3 adds a minimal `dry_run` parameter to `create_feature()` only — the `--dry-run` argparse flag remains Phase 6 (DX-01) work. **TEST-03 decision:** only the 4 existing template providers (bloc/cubit/riverpod/getx) are tested; the 5th (provider/ChangeNotifier) is a documented skip stub pending Phase 5 (STATE-01).
+
 ### Plans
 
-**Plan 3.1 — Validator and Utility Tests**
-- `tests/test_validator.py`: test `to_pascal_case()` — single words, snake_case, digits, edge cases
-- `tests/test_validator.py`: test `validate_name()` — valid names pass, invalid names raise SystemExit
-- Covers: TEST-01, TEST-04
-
-**Plan 3.2 — Generator Tests**
-- `tests/test_generator.py`: use `tmp_path` fixture to call `create_feature()` for each `--state` option
-- Assert the expected set of files exists in the correct paths
-- Assert file contents contain the correct class names (PascalCase)
-- Covers: TEST-02
-
-**Plan 3.3 — Template Content Tests**
-- `tests/test_templates.py`: call each template provider and assert returned file contents match expected Dart patterns
-- Cover bloc, cubit, riverpod, getx templates
-- Covers: TEST-03, TEST-05 (dry-run tested here or in CLI tests)
+- [ ] 03-01-PLAN.md — Validator/util edge-case tests: `to_pascal_case()` (multi/trailing underscore, digit segment) + `validate_name()` (hyphen, space, double underscore) in `tests/test_utils.py` (TEST-01, TEST-04) [Wave 1]
+- [ ] 03-02-PLAN.md — Generator tests: `create_feature()` cubit/riverpod/getx/None branches + entity path with full file-set assertions in `tests/test_generator.py` (TEST-02) [Wave 1]
+- [ ] 03-03-PLAN.md — Template content tests + dry_run: bloc/cubit/getx assertions, 5th-provider skip stub, `dry_run` param on `create_feature()` + dry-run tests in `tests/test_templates.py` (TEST-03, TEST-05) [Wave 1]
 
 ### Success Criteria
 - `pytest` runs and passes with zero failures
@@ -184,6 +176,7 @@
 **Plan 5.3 — Extended Tests**
 - Tests for Provider template content
 - Tests for test file generation paths and stub contents
+- Remove the Phase 3 `@pytest.mark.skip` stub for the provider template (now implemented)
 
 ### Success Criteria
 - `fclean --features auth --state provider` generates `auth_notifier.dart` with a valid ChangeNotifier class
@@ -202,7 +195,7 @@
 
 **Plan 6.1 — Dry-Run Flag**
 - Add `--dry-run` flag to argparse in `cli.py`
-- Pass flag through to `create_feature()` — when true, print paths without writing
+- Pass flag through to `create_feature()` — the `dry_run` parameter already exists (added in Phase 3 for TEST-05); this plan only wires the argparse flag to it
 - Covers: DX-01
 
 **Plan 6.2 — README + Help Text**
