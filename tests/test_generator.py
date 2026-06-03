@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0, ".")
-from fclean import get_bloc_templates  # NOTE: import path changes after Phase 2 package restructure
+from fclean import get_bloc_templates, create_feature  # NOTE: import path changes after Phase 2 package restructure
 
 
 def test_bloc_class_names():
@@ -10,3 +10,16 @@ def test_bloc_class_names():
     assert "UserProfileEvent" in all_content
     assert "UserProfileState" in all_content
     assert "User_profileBloc" not in all_content
+
+
+def test_create_feature_creates_expected_files(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth", "bloc")
+    assert (tmp_path / "lib/features/auth/domain/repository/auth_repository.dart").exists()
+    assert (tmp_path / "lib/features/auth/presentation/bloc/auth_bloc.dart").exists()
+
+
+def test_create_feature_skip_existing_does_not_crash(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth", "bloc")
+    create_feature("auth", "bloc")  # second run must not crash (validates CR-01 fix)
