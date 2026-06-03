@@ -1,4 +1,5 @@
 import sys
+import re
 import argparse
 from pathlib import Path
 
@@ -12,6 +13,20 @@ def to_pascal_case(name: str) -> str:
         my_feature2 -> MyFeature2
     """
     return "".join(word.capitalize() for word in name.split("_"))
+
+
+_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def validate_name(name: str) -> None:
+    """Validate a feature or entity name. Exits 1 with a clear message if invalid."""
+    if not _NAME_RE.fullmatch(name):
+        print(
+            f"Error: Invalid name '{name}'. "
+            "Names must start with a lowercase letter and contain only [a-z0-9_].",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 def is_flutter_project():
@@ -85,6 +100,10 @@ def create_feature(feature_arg, state_type):
     feature_name = parts[0]
     entity_name = parts[1] if len(parts) > 1 else None
 
+    validate_name(feature_name)
+    if entity_name is not None:
+        validate_name(entity_name)
+
     base_path = Path("lib/features") / feature_name
     
     sub_dirs = [
@@ -146,6 +165,9 @@ def main():
     if not is_flutter_project():
         print("Error: This tool must be run from the root of a Flutter project.")
         sys.exit(1)
+
+    if args.state is None:
+        print("No state management files generated. Pass --state <lib> to scaffold a state layer.")
 
     for feature in args.features:
         create_feature(feature, args.state)
