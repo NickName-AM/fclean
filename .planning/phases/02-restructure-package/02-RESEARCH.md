@@ -354,16 +354,18 @@ fclean --features auth --state bloc  # Regression test from PKG-03
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `__init__.py` expose the entire current public API, or only the minimal surface?**
    - What we know: The three test files import `to_pascal_case`, `validate_name`, `create_feature`, `get_bloc_templates`, `get_riverpod_templates` from `fclean`
    - What's unclear: Whether future phases will want to import directly from submodules instead
    - Recommendation: Re-export everything the tests currently use; add more only as needed. This is the minimum change to keep PKG-03 green.
+   - **(RESOLVED)** Plan 02-01 Task 2 builds `fclean/__init__.py` with a 7-symbol `__all__` (`to_pascal_case`, `validate_name`, `create_feature`, `get_bloc_templates`, `get_cubit_templates`, `get_riverpod_templates`, `get_getx_templates`) — the minimal re-export surface that keeps every existing test import syntactically unchanged. Future submodule-direct imports remain available without widening `__init__.py`.
 
 2. **`fclean.py` deletion: same commit as package creation, or a separate task?**
    - What we know: They cannot coexist safely; Python prefers the directory
    - Recommendation: Delete in the same task as creating `fclean/__init__.py`. The plan should structure this as a single atomic action.
+   - **(RESOLVED)** Plan 02-01 Task 2 deletes `fclean.py` atomically in the same task/commit that creates `fclean/__init__.py`, eliminating any window where the file and package directory coexist (per Pitfall 1).
 
 ---
 
