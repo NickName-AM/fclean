@@ -14,6 +14,20 @@ def test_to_pascal_case_with_digit():
     assert to_pascal_case("my_feature2") == "MyFeature2"
 
 
+def test_to_pascal_case_multiple_underscores():
+    assert to_pascal_case("my_long_feature_name") == "MyLongFeatureName"
+
+
+def test_to_pascal_case_trailing_underscore():
+    # "auth_".split("_") -> ["auth", ""] and "".capitalize() == "" so trailing underscore
+    # produces no trailing character: "Auth" not "Auth_"
+    assert to_pascal_case("auth_") == "Auth"
+
+
+def test_to_pascal_case_digit_end_segment():
+    assert to_pascal_case("feature2_auth") == "Feature2Auth"
+
+
 def test_validate_name_valid_passes():
     validate_name("auth")         # must not raise
     validate_name("user_profile")
