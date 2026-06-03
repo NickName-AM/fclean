@@ -1,6 +1,4 @@
-import sys
-sys.path.insert(0, ".")
-from fclean import get_bloc_templates, create_feature  # NOTE: import path changes after Phase 2 package restructure
+from fclean import get_bloc_templates, create_feature
 
 
 def test_bloc_class_names():

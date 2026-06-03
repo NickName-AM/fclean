@@ -1,6 +1,4 @@
-import sys
-sys.path.insert(0, ".")
-from fclean import get_riverpod_templates  # NOTE: import path changes after Phase 2 package restructure
+from fclean import get_riverpod_templates
 
 
 def test_riverpod_typed():

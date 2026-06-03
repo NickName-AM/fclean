@@ -1,7 +1,5 @@
-import sys
 import pytest
-sys.path.insert(0, ".")
-from fclean import to_pascal_case, validate_name  # NOTE: import path changes after Phase 2 package restructure
+from fclean import to_pascal_case, validate_name
 
 
 def test_to_pascal_case_single_word():
