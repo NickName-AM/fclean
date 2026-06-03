@@ -53,3 +53,20 @@ def test_create_feature_getx(tmp_path, monkeypatch):
     assert (tmp_path / "lib/features/auth/domain/repository/auth_repository.dart").exists()
     assert (tmp_path / "lib/features/auth/presentation/controller/auth_controller.dart").exists()
     assert (tmp_path / "lib/features/auth/presentation/bindings/auth_binding.dart").exists()
+
+
+def test_create_feature_no_state(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth", None)
+    assert (tmp_path / "lib/features/auth/domain/repository/auth_repository.dart").exists()
+    assert not (tmp_path / "lib/features/auth/presentation/bloc").exists()
+    assert not (tmp_path / "lib/features/auth/presentation/cubit").exists()
+    assert not (tmp_path / "lib/features/auth/presentation/providers").exists()
+    assert not (tmp_path / "lib/features/auth/presentation/controller").exists()
+
+
+def test_create_feature_with_entity(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth:user", "bloc")
+    assert (tmp_path / "lib/features/auth/domain/entities/user.dart").exists()
+    assert (tmp_path / "lib/features/auth/data/models/user_model.dart").exists()
