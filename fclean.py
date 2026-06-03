@@ -15,7 +15,7 @@ def to_pascal_case(name: str) -> str:
     return "".join(word.capitalize() for word in name.split("_"))
 
 
-_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
 def validate_name(name: str) -> None:
