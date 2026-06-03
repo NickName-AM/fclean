@@ -4,6 +4,7 @@ from fclean import (
     get_cubit_templates,
     get_riverpod_templates,
     get_getx_templates,
+    create_feature,
 )
 
 
@@ -56,3 +57,20 @@ def test_provider_template_class_names():
     templates = get_provider_templates("auth")
     all_content = " ".join(templates.values())
     assert "AuthChangeNotifier" in all_content
+
+
+def test_dry_run_no_files_written(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth", "bloc", dry_run=True)
+    captured = capsys.readouterr()
+    assert not (tmp_path / "lib").exists()
+    assert "auth_bloc.dart" in captured.out
+
+
+def test_dry_run_prints_all_expected_paths(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth", "bloc", dry_run=True)
+    captured = capsys.readouterr()
+    assert "auth_repository.dart" in captured.out
+    assert "auth_remote_datasource.dart" in captured.out
+    assert "auth_bloc.dart" in captured.out
