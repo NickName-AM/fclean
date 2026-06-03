@@ -9,7 +9,7 @@
 |-------|------|--------|-------------|
 | 1 | 3/3 | Complete   | 2026-06-03 |
 | 2 | 2/2 | Complete   | 2026-06-03 |
-| 3 | Tool Test Suite | pytest coverage for all generators | TEST-01 – TEST-05 |
+| 3 | 3/3 | Complete   | 2026-06-03 |
 | 4 | UseCase Scaffolding | Abstract base + concrete stubs | USE-01, USE-02, USE-03 |
 | 5 | Extended Scaffolding | Provider + test file generation | STATE-01, STATE-02, TSCF-01 – TSCF-03 |
 | 6 | Developer Experience | dry-run, polish, README | DX-01 |
@@ -97,7 +97,7 @@
 
 **Goal:** A `pytest` suite validates all generators, templates, and validators.
 **Requirements:** TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 **Why third:** Tests must be written against the new module layout (Phase 2) to be maintainable. Adding features in Phases 4–5 without tests would mean shipping untested code.
 
@@ -107,9 +107,9 @@
 
 ### Plans
 
-- [ ] 03-01-PLAN.md — Validator/util edge-case tests: `to_pascal_case()` (multi/trailing underscore, digit segment) + `validate_name()` (hyphen, space, double underscore) in `tests/test_utils.py` (TEST-01, TEST-04) [Wave 1]
-- [ ] 03-02-PLAN.md — Generator tests: `create_feature()` cubit/riverpod/getx/None branches + entity path with full file-set assertions in `tests/test_generator.py` (TEST-02) [Wave 1]
-- [ ] 03-03-PLAN.md — Template content tests + dry_run: bloc/cubit/getx assertions, 5th-provider skip stub, `dry_run` param on `create_feature()` + dry-run tests in `tests/test_templates.py` (TEST-03, TEST-05) [Wave 1]
+- [x] 03-01-PLAN.md — Validator/util edge-case tests: `to_pascal_case()` (multi/trailing underscore, digit segment) + `validate_name()` (hyphen, space, double underscore) in `tests/test_utils.py` (TEST-01, TEST-04) [Wave 1]
+- [x] 03-02-PLAN.md — Generator tests: `create_feature()` cubit/riverpod/getx/None branches + entity path with full file-set assertions in `tests/test_generator.py` (TEST-02) [Wave 1]
+- [x] 03-03-PLAN.md — Template content tests + dry_run: bloc/cubit/getx assertions, 5th-provider skip stub, `dry_run` param on `create_feature()` + dry-run tests in `tests/test_templates.py` (TEST-03, TEST-05) [Wave 1]
 
 ### Success Criteria
 - `pytest` runs and passes with zero failures
