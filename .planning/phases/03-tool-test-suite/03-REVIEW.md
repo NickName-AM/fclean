@@ -1,79 +1,124 @@
 ---
 phase: 03-tool-test-suite
-reviewed: 2026-06-03T00:00:00Z
+reviewed: 2026-06-17T00:00:00Z
 depth: standard
-files_reviewed: 5
+files_reviewed: 4
 files_reviewed_list:
   - tests/test_utils.py
   - tests/test_generator.py
   - fclean/generators/feature.py
   - tests/test_templates.py
-  - pyproject.toml
 findings:
-  critical: 1
-  warning: 4
+  critical: 0
+  warning: 6
   info: 3
-  total: 8
+  total: 9
 status: issues_found
 ---
 
 # Phase 03: Code Review Report
 
-**Reviewed:** 2026-06-03T00:00:00Z
+**Reviewed:** 2026-06-17
 **Depth:** standard
-**Files Reviewed:** 5
+**Files Reviewed:** 4
 **Status:** issues_found
 
 ## Summary
 
-Five files reviewed: three test modules (`test_utils.py`, `test_generator.py`, `test_templates.py`), the core feature generator (`fclean/generators/feature.py`), and the package manifest (`pyproject.toml`). The test suite covers happy-path and idempotency cases well. The critical defect is that `test_create_feature_no_state` provides false coverage — it passes while leaving the actual output behavior entirely unverified. Four warnings address brittleness in the riverpod template test, a non-asserting util test, a silent data-corruption risk in `to_pascal_case`, and a missing test for the invalid-state-type code path. Three info items cover test duplication, packaging notes, and a fragile skipped-test import.
+Four files were reviewed: two test modules (`tests/test_utils.py`, `tests/test_generator.py`), one production module (`fclean/generators/feature.py`), and one additional test module (`tests/test_templates.py`). The implementation is broadly correct — path traversal is blocked by `validate_name`, the `dry_run` flag correctly suppresses all filesystem writes, and the skip-existing idempotency behaviour works as expected. No security vulnerabilities were found.
 
----
-
-## Critical Issues
-
-### CR-01: `test_create_feature_no_state` passes without verifying the data-layer output — false coverage
-
-**File:** `tests/test_generator.py:58-65`
-
-**Issue:** The test is named `test_create_feature_no_state` and is supposed to document the behaviour when `state_type=None`. It asserts only that `domain/repository/auth_repository.dart` exists and that four `presentation/` subdirectories do not exist. It makes **no assertion** about the data layer (`data/datasources/`, `data/repository/`). In practice, `create_feature("auth", None)` creates all four data-layer files unconditionally (lines 44-54 of `feature.py` build `files_to_create` regardless of `state_type`). The test is silent on whether this is intentional. Two mutually exclusive behaviours are possible and neither is verified:
-
-- **Intended behaviour A:** `None` means "no presentation layer, full data layer still generated" — the test should assert that data-layer files *do* exist, documenting this as a feature.
-- **Intended behaviour B:** `None` means "minimal scaffold — no generated files beyond the domain repository" — the implementation is wrong and the test fails to catch it.
-
-Either way, the test currently passes while leaving a concrete behaviour gap undocumented and unguarded. Any future refactor that accidentally starts or stops creating data-layer files when `state_type=None` will not be caught.
-
-**Fix (for Intended Behaviour A — data layer always created):**
-
-```python
-def test_create_feature_no_state(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    create_feature("auth", None)
-    # domain layer
-    assert (tmp_path / "lib/features/auth/domain/repository/auth_repository.dart").exists()
-    # data layer is still generated even with no state management
-    assert (tmp_path / "lib/features/auth/data/datasources/auth_remote_datasource.dart").exists()
-    assert (tmp_path / "lib/features/auth/data/datasources/auth_local_datasource.dart").exists()
-    assert (tmp_path / "lib/features/auth/data/repository/auth_repository_impl.dart").exists()
-    # no presentation state dirs
-    assert not (tmp_path / "lib/features/auth/presentation/bloc").exists()
-    assert not (tmp_path / "lib/features/auth/presentation/cubit").exists()
-    assert not (tmp_path / "lib/features/auth/presentation/providers").exists()
-    assert not (tmp_path / "lib/features/auth/presentation/controller").exists()
-```
+Defects are concentrated in test quality and one latent data-corruption risk in the production utility. Six warnings cover: silent lowercasing in `to_pascal_case`, missing exit-code assertions on three `validate_name` tests, weak integration coverage for `bloc` mode relative to all other state types, no test for the invalid `state_type` exit path, a riverpod test that accesses content by positional index rather than explicit key, and a misleading "Generated" print during dry runs. Three info items cover the `test_bloc_class_names` duplication, an unenforced `is_flutter_project` guard, and the forever-skipped provider test.
 
 ---
 
 ## Warnings
 
-### WR-01: `test_riverpod_typed` asserts against positional dict index instead of explicit key
+### WR-01: `to_pascal_case` uses `str.capitalize()` which silently lowercases non-initial characters
 
-**File:** `tests/test_templates.py:13`
+**File:** `fclean/generators/feature.py` (cross-ref: `fclean/generators/validator.py:13`)
+**Issue:** `str.capitalize()` sets the first character to uppercase and **lowercases every subsequent character**. For a word segment like `"feature2A"`, it produces `"Feature2a"`, silently destroying the trailing `A`. The current `_NAME_RE` validator only admits `[a-z0-9_]`, so no existing caller can trigger this today. However, `to_pascal_case` is a public API exported from `fclean/__init__.py`, its docstring does not document the all-lowercase constraint, and any future relaxation of the validator (or a directly-called utility use) will produce incorrect Dart class names without any error. None of the tests exercises a segment that would expose this (all test segments are pure lowercase).
 
-**Issue:** `content = list(templates.values())[0]` retrieves the first dict value by insertion order. `get_riverpod_templates` currently returns a single-key dict, so index 0 is always the provider file. If a second key is added to the template function (e.g., a state file), this test silently shifts to asserting against whichever key happens to be first in the new dict, potentially asserting against the wrong file with no failure.
+**Fix:** Replace `capitalize()` with an explicit head-uppercase that preserves the tail, and filter empty segments:
+```python
+def to_pascal_case(name: str) -> str:
+    """Convert snake_case to PascalCase for Dart class names."""
+    return "".join(
+        word[:1].upper() + word[1:] for word in name.split("_") if word
+    )
+```
+The `if word` guard also makes the trailing-underscore behaviour explicit instead of relying on `"".capitalize() == ""`.
+
+---
+
+### WR-02: Three `validate_name` failure tests never assert exit code
+
+**File:** `tests/test_utils.py:42-49,52-54`
+**Issue:** `test_validate_name_uppercase_exits` (line 42), `test_validate_name_leading_digit_exits` (line 47), and `test_validate_name_empty_exits` (line 52) all capture `SystemExit` but never assert `exc_info.value.code == 1`. These tests pass even if `validate_name` calls `sys.exit(0)` or `sys.exit(99)`. The three other error tests in the same file (`test_validate_name_invalid_exits`, `test_validate_name_hyphen_exits`, `test_validate_name_space_exits`) all correctly assert `exc_info.value.code == 1`. The inconsistency leaves part of the exit-code contract unguarded.
 
 **Fix:**
+```python
+def test_validate_name_uppercase_exits():
+    with pytest.raises(SystemExit) as exc_info:
+        validate_name("User")
+    assert exc_info.value.code == 1
 
+def test_validate_name_leading_digit_exits():
+    with pytest.raises(SystemExit) as exc_info:
+        validate_name("1auth")
+    assert exc_info.value.code == 1
+
+def test_validate_name_empty_exits():
+    with pytest.raises(SystemExit) as exc_info:
+        validate_name("")
+    assert exc_info.value.code == 1
+```
+
+---
+
+### WR-03: `test_create_feature_creates_expected_files` asserts only 2 of 7+ files for `bloc` mode
+
+**File:** `tests/test_generator.py:13-17`
+**Issue:** The bloc integration test asserts only `auth_repository.dart` (domain layer) and `auth_bloc.dart` (presentation layer). All other state-type integration tests — `test_create_feature_cubit` (line 26), `test_create_feature_riverpod` (line 37), `test_create_feature_getx` (line 47) — each assert the full data layer (`auth_remote_datasource.dart`, `auth_local_datasource.dart`, `auth_repository_impl.dart`) plus their state-layer files. A regression that deletes data-layer files in `bloc` mode would go undetected by this test while being caught for every other state type.
+
+**Fix:** Align bloc integration coverage with the other state-type tests:
+```python
+def test_create_feature_creates_expected_files(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    create_feature("auth", "bloc")
+    assert (tmp_path / "lib/features/auth/data/datasources/auth_remote_datasource.dart").exists()
+    assert (tmp_path / "lib/features/auth/data/datasources/auth_local_datasource.dart").exists()
+    assert (tmp_path / "lib/features/auth/data/repository/auth_repository_impl.dart").exists()
+    assert (tmp_path / "lib/features/auth/domain/repository/auth_repository.dart").exists()
+    assert (tmp_path / "lib/features/auth/presentation/bloc/auth_event.dart").exists()
+    assert (tmp_path / "lib/features/auth/presentation/bloc/auth_state.dart").exists()
+    assert (tmp_path / "lib/features/auth/presentation/bloc/auth_bloc.dart").exists()
+```
+
+---
+
+### WR-04: No test covers the invalid `state_type` exit path in `create_feature`
+
+**File:** `tests/test_generator.py` (missing), cross-referenced with `fclean/generators/feature.py:70-76`
+**Issue:** `feature.py` lines 70-76 guard against an unknown `state_type` string with `sys.exit(1)`. This entire branch has zero test coverage. A refactor that accidentally removes the guard, changes the error condition, or modifies `state_map` keys will silently break the exit behaviour.
+
+**Fix:**
+```python
+def test_create_feature_invalid_state_type_exits(tmp_path, monkeypatch):
+    import pytest
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(SystemExit) as exc_info:
+        create_feature("auth", "redux")
+    assert exc_info.value.code == 1
+```
+
+---
+
+### WR-05: `test_riverpod_typed` accesses template content by positional index instead of explicit key
+
+**File:** `tests/test_templates.py:13`
+**Issue:** `content = list(templates.values())[0]` retrieves the first dict value by insertion order. `get_riverpod_templates` currently returns a single-key dict, so index 0 is always the provider file. If a second key is added to the template (e.g., a separate state file), this line silently shifts to asserting against whichever key happens to sort first in insertion order — potentially asserting against the wrong file with no test failure.
+
+**Fix:**
 ```python
 def test_riverpod_typed():
     templates = get_riverpod_templates("user_profile")
@@ -86,110 +131,64 @@ def test_riverpod_typed():
 
 ---
 
-### WR-02: `test_validate_name_valid_passes` has no explicit assertion
+### WR-06: `print("Generated feature: ...")` fires unconditionally during dry runs, producing misleading output
 
-**File:** `tests/test_utils.py:31-33`
-
-**Issue:** The test body calls `validate_name("auth")` and `validate_name("user_profile")` with no `assert` statement and no `pytest.raises` context. The implicit assertion is that no `SystemExit` is raised. This works today because `validate_name` calls `sys.exit(1)` on failure, which pytest catches as a test error. However it provides zero signal if the function is changed to return an error value rather than exit, or if a silent regression is introduced (e.g., validation is accidentally skipped). The test name promises something it does not enforce.
-
-**Fix:**
-
-```python
-def test_validate_name_valid_passes():
-    # Neither call should raise SystemExit
-    try:
-        validate_name("auth")
-        validate_name("user_profile")
-    except SystemExit:
-        pytest.fail("validate_name raised SystemExit for a valid name")
-```
-
----
-
-### WR-03: `to_pascal_case` uses `str.capitalize()` which silently lowercases non-initial characters
-
-**File:** `fclean/generators/validator.py:13`
-
-**Issue:** `str.capitalize()` lowercases every character after the first. For input `"feature2A"` it produces `"Feature2a"` (the trailing `A` is destroyed). The current validator blocks all uppercase input (`_NAME_RE` only allows `[a-z0-9_]`), so no existing caller can trigger this today. However the function is a general utility exposed in `__init__.py`, the docstring does not document the all-lowercase constraint, and a future caller relaxing that assumption (or a future entity name with a digit+letter segment like `"oauth2_token"`) will get silent corruption. The tests do not exercise this edge case.
-
-**Fix:** Replace `capitalize()` with a manual head-uppercase that preserves remaining characters, and drop empty segments explicitly:
-
-```python
-def to_pascal_case(name: str) -> str:
-    """Convert snake_case to PascalCase for Dart class names."""
-    return "".join(
-        word[:1].upper() + word[1:] for word in name.split("_") if word
-    )
-```
-
-The `if word` filter also makes the trailing-underscore behaviour explicit (empty segment is dropped) rather than relying on `"".capitalize() == ""`.
-
----
-
-### WR-04: No test covers the invalid `state_type` exit path in `create_feature`
-
-**File:** `tests/test_generator.py` (missing coverage), cross-referenced with `fclean/generators/feature.py:70-76`
-
-**Issue:** Lines 70-76 of `feature.py` guard against unknown `state_type` strings with a `sys.exit(1)`. This code path has zero test coverage. Any refactor of the guard condition (e.g., changing the comparison, altering the `state_map` keys, or accidentally removing the guard) will not be caught.
+**File:** `fclean/generators/feature.py:93`
+**Issue:** Line 93 always prints `"Generated feature: auth (State: bloc)"`. When `dry_run=True`, no files are created, so "Generated" is factually wrong. The tests `test_dry_run_no_files_written` and `test_dry_run_prints_all_expected_paths` do not assert the content or absence of this message, so the misleading output goes undetected.
 
 **Fix:**
-
 ```python
-def test_create_feature_invalid_state_type_exits(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    with pytest.raises(SystemExit) as exc_info:
-        create_feature("auth", "redux")
-    assert exc_info.value.code == 1
+    if dry_run:
+        print(f"Dry run: would generate feature '{feature_name}' (State: {state_type or 'None'})")
+    else:
+        print(f"Generated feature: {feature_name} (State: {state_type or 'None'})")
 ```
 
 ---
 
 ## Info
 
-### IN-01: Duplicate assertion between `test_generator.py` and `test_templates.py`
+### IN-01: Duplicate bloc class-name assertion between `test_generator.py` and `test_templates.py`
 
-**File:** `tests/test_generator.py:4-10` and `tests/test_templates.py:20-26`
+**File:** `tests/test_generator.py:4-10` and `tests/test_templates.py:20-25`
+**Issue:** `test_bloc_class_names` and `test_bloc_template_class_names` both call `get_bloc_templates("user_profile")` and assert the same three strings (`UserProfileBloc`, `UserProfileEvent`, `UserProfileState`). The tests are functionally identical. A bloc template change requires updating both; a failure reports twice under different names.
 
-**Issue:** `test_bloc_class_names` in `test_generator.py` and `test_bloc_template_class_names` in `test_templates.py` assert the exact same three class-name strings (`UserProfileBloc`, `UserProfileEvent`, `UserProfileState`) against `get_bloc_templates("user_profile")`. The two tests are functionally identical. A failure will appear twice in the test run with different IDs, obscuring the root cause, and maintenance of both is required for any bloc template change.
-
-**Fix:** Remove `test_bloc_class_names` from `test_generator.py`; it belongs in `test_templates.py`.
+**Fix:** Remove `test_bloc_class_names` from `tests/test_generator.py`. The template-level assertion belongs in `tests/test_templates.py`.
 
 ---
 
-### IN-02: `print(f"Generated feature: ...")` executes unconditionally, including during dry run
+### IN-02: `is_flutter_project()` guard has no test coverage
 
-**File:** `fclean/generators/feature.py:93`
+**File:** `fclean/generators/feature.py:11-13`
+**Issue:** `is_flutter_project()` is the only safeguard against running the tool outside a Flutter project. All integration tests call `create_feature()` directly, bypassing the guard. An accidental inversion of the condition (`not Path("pubspec.yaml").exists()` instead of `Path("pubspec.yaml").exists()`) would not be caught by any test.
 
-**Issue:** Line 93 prints `"Generated feature: auth (State: bloc)"` even when `dry_run=True`. During a dry run, no files are created, so the message is misleading ("Generated" implies creation). The test `test_dry_run_no_files_written` does not assert the absence of this message, so the false output goes undetected.
-
-**Fix:**
-
+**Fix:** Add two unit tests:
 ```python
-    if dry_run:
-        print(f"Dry run complete. Would generate feature: {feature_name} (State: {state_type if state_type else 'None'})")
-    else:
-        print(f"Generated feature: {feature_name} (State: {state_type if state_type else 'None'})")
+def test_is_flutter_project_true(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "pubspec.yaml").write_text("name: my_app\n")
+    from fclean.generators.feature import is_flutter_project
+    assert is_flutter_project() is True
+
+def test_is_flutter_project_false(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    from fclean.generators.feature import is_flutter_project
+    assert is_flutter_project() is False
 ```
 
-Update the dry-run tests to assert the new message is absent or correct.
-
 ---
 
-### IN-03: Skipped test imports an unresolved symbol without a collection-safe guard
+### IN-03: Permanently-skipped provider test will silently stay skipped when the feature lands
 
 **File:** `tests/test_templates.py:54-59`
+**Issue:** `@pytest.mark.skip` will continue skipping the test indefinitely even after `get_provider_templates` is implemented and exported. There is no mechanism to surface "this test should now be un-skipped." Using `pytest.mark.xfail(raises=ImportError, strict=True)` would flip to a test failure the moment the import succeeds, alerting the developer to remove the marker.
 
-**Issue:** The `@pytest.mark.skip` decorated test imports `from fclean import get_provider_templates` inside the test body. The body-level import is only evaluated at execution time, not at collection time, so pytest never raises `ImportError` while the skip is active. This is safe today. However when the skip is eventually removed (Phase 5), if `get_provider_templates` has not been added to `fclean/__init__.py`, the test raises an opaque `ImportError` instead of a clear assertion failure. The skip reason string `"Phase 5: ..."` is in a comment, not in the `reason=` parameter of `pytest.mark.skip`.
-
-**Fix:** Move the reason into `reason=` and guard the import:
-
+**Fix:**
 ```python
-@pytest.mark.skip(reason="Phase 5: provider/ChangeNotifier template pending STATE-01")
+@pytest.mark.xfail(raises=ImportError, strict=True,
+                   reason="Phase 5: provider/ChangeNotifier template pending STATE-01")
 def test_provider_template_class_names():
-    try:
-        from fclean import get_provider_templates
-    except ImportError:
-        pytest.skip("get_provider_templates not yet exported from fclean")
+    from fclean import get_provider_templates
     templates = get_provider_templates("auth")
     all_content = " ".join(templates.values())
     assert "AuthChangeNotifier" in all_content
@@ -197,6 +196,6 @@ def test_provider_template_class_names():
 
 ---
 
-_Reviewed: 2026-06-03T00:00:00Z_
+_Reviewed: 2026-06-17_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
