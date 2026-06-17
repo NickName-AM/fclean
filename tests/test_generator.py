@@ -75,3 +75,11 @@ def test_create_feature_with_entity(tmp_path, monkeypatch):
     create_feature("auth:user", "bloc")
     assert (tmp_path / "lib/features/auth/domain/entities/user.dart").exists()
     assert (tmp_path / "lib/features/auth/data/models/user_model.dart").exists()
+
+
+def test_create_feature_invalid_state_type_exits(tmp_path, monkeypatch):
+    import pytest
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(SystemExit) as exc_info:
+        create_feature("auth", "redux")
+    assert exc_info.value.code == 1
