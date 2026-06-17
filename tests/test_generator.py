@@ -13,7 +13,12 @@ def test_bloc_class_names():
 def test_create_feature_creates_expected_files(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     create_feature("auth", "bloc")
+    assert (tmp_path / "lib/features/auth/data/datasources/auth_remote_datasource.dart").exists()
+    assert (tmp_path / "lib/features/auth/data/datasources/auth_local_datasource.dart").exists()
+    assert (tmp_path / "lib/features/auth/data/repository/auth_repository_impl.dart").exists()
     assert (tmp_path / "lib/features/auth/domain/repository/auth_repository.dart").exists()
+    assert (tmp_path / "lib/features/auth/presentation/bloc/auth_event.dart").exists()
+    assert (tmp_path / "lib/features/auth/presentation/bloc/auth_state.dart").exists()
     assert (tmp_path / "lib/features/auth/presentation/bloc/auth_bloc.dart").exists()
 
 
