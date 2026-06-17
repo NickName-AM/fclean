@@ -10,7 +10,9 @@ def to_pascal_case(name: str) -> str:
         auth -> Auth
         my_feature2 -> MyFeature2
     """
-    return "".join(word.capitalize() for word in name.split("_"))
+    return "".join(
+        word[:1].upper() + word[1:] for word in name.split("_") if word
+    )
 
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
