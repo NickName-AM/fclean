@@ -40,18 +40,21 @@ def test_validate_name_invalid_exits():
 
 
 def test_validate_name_uppercase_exits():
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         validate_name("User")
+    assert exc_info.value.code == 1
 
 
 def test_validate_name_leading_digit_exits():
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         validate_name("1auth")
+    assert exc_info.value.code == 1
 
 
 def test_validate_name_empty_exits():
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         validate_name("")
+    assert exc_info.value.code == 1
 
 
 def test_validate_name_hyphen_exits():
