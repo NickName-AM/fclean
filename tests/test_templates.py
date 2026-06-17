@@ -10,7 +10,7 @@ from fclean import (
 
 def test_riverpod_typed():
     templates = get_riverpod_templates("user_profile")
-    content = list(templates.values())[0]
+    content = templates["presentation/providers/user_profile_provider.dart"]
     assert "StateNotifierProvider<" in content
     assert "UserProfileNotifier" in content
     assert "UserProfileState" in content
