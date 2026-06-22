@@ -1,40 +1,99 @@
 # fclean
 
-fclean is a Python tool that automates the generation of Clean Architecture folders and files for Flutter projects. It removes the manual effort of creating repetitive directory structures and boilerplate code.
+A CLI tool that scaffolds Flutter Clean Architecture feature directories and Dart boilerplate so you don't have to create them by hand.
 
-## Project Status
+## What it generates
 
-The tool currently supports automated scaffolding for core Clean Architecture layers and integrates popular state management libraries into the presentation layer.
+For each feature, fclean creates the full three-layer directory tree under `lib/features/<feature>/`:
 
-## Features
+```
+lib/features/auth/
+├── data/
+│   ├── datasources/
+│   │   ├── auth_remote_datasource.dart   # abstract class
+│   │   └── auth_local_datasource.dart    # abstract class
+│   ├── models/
+│   │   └── user_model.dart               # extends entity (if entity provided)
+│   └── repository/
+│       └── auth_repository_impl.dart     # implements domain repository
+├── domain/
+│   ├── entities/
+│   │   └── user.dart                     # plain Dart class (if entity provided)
+│   ├── repository/
+│   │   └── auth_repository.dart          # abstract class
+│   └── usecases/
+└── presentation/
+    ├── pages/
+    ├── widgets/
+    └── bloc/ | cubit/ | ...              # state management files (if --state passed)
+```
 
-* Validation: Ensures the script is running in a Flutter project by checking for pubspec.yaml.
-* Layered Scaffolding: Automatically creates data, domain, and presentation folders.
-* State Management: Supports automated boilerplate for bloc, cubit, riverpod, and getx.
-* Conditional Generation: Entities and models are created only if an entity name is provided.
-* Data Safety: Prevents overwriting existing files to protect manual changes.
-* Automatic Imports: Correctly handles imports between models and entities, as well as repository implementations and interfaces.
+State management files generated per `--state` option:
+
+| `--state` | Files created |
+|-----------|---------------|
+| `bloc` | `*_event.dart`, `*_state.dart`, `*_bloc.dart` |
+| `cubit` | `*_state.dart`, `*_cubit.dart` |
+| `riverpod` | `*_provider.dart`, `*_state.dart` |
+| `getx` | `*_controller.dart`, `*_binding.dart` |
+
+Existing files are never overwritten.
+
+## Requirements
+
+- Python 3.8+
+- Must be run from the root of a Flutter project (directory containing `pubspec.yaml`)
+
+## Installation
+
+### From GitHub
+
+```bash
+pip install git+https://github.com/NickName-AM/fclean.git
+```
+
+### From source
+
+```bash
+git clone https://github.com/NickName-AM/fclean.git
+cd fclean
+pip install .
+```
+
+After installation the `fclean` command is available globally.
 
 ## Usage
 
-Run the tool from your project root:
 ```
-python3 fclean.py --features feature_name:entity_name --state state_library
+fclean --features <feature>[:<entity>] [<feature>[:<entity>] ...] [--state <lib>]
 ```
 
-
-### Commands
-
-* --features: Accepts multiple arguments in the format name:entity. The entity is optional.
-* --state: Optional flag to generate state management boilerplate. Options include bloc, cubit, riverpod, and getx.
+| Argument | Description |
+|----------|-------------|
+| `--features` | One or more features in `name` or `name:entity` format. Names must be `snake_case`. |
+| `--state` | Optional. One of `bloc`, `cubit`, `riverpod`, `getx`. |
 
 ### Examples
-- Single feature 
-```
-python3 fclean.py --features auth:user --state bloc
+
+```bash
+# Feature with entity and bloc state management
+fclean --features auth:user --state bloc
+
+# Feature without entity, no state layer
+fclean --features profile
+
+# Multiple features in one command
+fclean --features auth:user settings:preferences --state cubit
+
+# Riverpod with no entity
+fclean --features cart --state riverpod
 ```
 
-- Multiple features
-```
-python3 fclean.py --features auth:user place:place --state bloc
+## Development
+
+```bash
+git clone https://github.com/NickName-AM/fclean.git
+cd fclean
+pip install -e ".[dev]"
+pytest
 ```
